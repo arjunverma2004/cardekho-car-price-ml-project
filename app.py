@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import joblib
+import utils
+from utils import selectbox_values
 
 st.markdown(
     """
@@ -20,12 +22,6 @@ price_model = joblib.load("models/model.pkl")
 preprocessor=joblib.load("models/preprocessor.pkl")
 le=joblib.load("models/le.pkl")
 
-def process_input_data(data):
-    # Apply label encoding to the 'model' column
-    data['model'] = le.transform(data['model'])
-    # Preprocess the entire data using the preprocessor
-    processed_data = preprocessor.transform(data)
-    return processed_data
 
 
 # Title
@@ -54,33 +50,35 @@ with cols[0].container(height=100):
        'GTC4Lusso', 'GLS', 'X-Trail', 'XE', 'XC60', 'Panamera', 'Alturas',
        'Altroz', 'NX', 'Carnival', 'C', 'RX', 'Ghost', 'Quattroporte',
        'Gurkha'])
+    
+s_val=selectbox_values(model)
 
 with cols[1].container(height=100):
     vehicle_age = st.slider("Vehicle Age (Years)", 0, 30, 5)
 
 with cols[0].container(height=100):
-    km_driven = st.number_input("Kilometers Driven", min_value=0, value=50000, step=1000)
+    km_driven = st.number_input("Kilometers Driven", min_value=0, value=s_val.km_driven(), step=1000)
 
 with cols[1].container(height=100):
     seller_type = st.selectbox("Seller Type", ["Individual", "Dealer", "Trustmark Dealer"])
 
 with cols[0].container(height=100):
-    fuel_type = st.selectbox("Fuel Type", ["Petrol", "Diesel", "CNG", "LPG", "Electric"])
+    fuel_type = st.selectbox("Fuel Type", s_val.fuel_type())
 
 with cols[1].container(height=100):
-    transmission_type = st.selectbox("Transmission", ["Manual", "Automatic"])
+    transmission_type = st.selectbox("Transmission", s_val.transmission_type())
 
 with cols[0].container(height=100):
-    mileage = st.number_input("Mileage (kmpl)", min_value=0.0, value=18.0, step=0.1)
+    mileage = st.number_input("Mileage (kmpl)", min_value=0.0, value=s_val.mileage(), step=0.5)
 
 with cols[1].container(height=100):
-    engine = st.number_input("Engine Capacity (CC)", min_value=500, value=1197, step=100)
+    engine = st.selectbox("Engine Capacity (CC)", s_val.engine())
 
 with cols[0].container(height=100):
-    max_power = st.number_input("Max Power (bhp)", min_value=20.0, value=70.0, step=1.0)
+    max_power = st.number_input("Max Power (bhp)", min_value=20, value=s_val.max_power(), step=1)
 
 with cols[1].container(height=100):
-    seats = st.selectbox("Seats", [2, 4, 5, 6, 7, 8, 9])
+    seats = st.selectbox("Seats", s_val.seats())
 
 # Map input to DataFrame
 input_data = pd.DataFrame({
@@ -102,7 +100,7 @@ input_data = pd.DataFrame({
 
 if st.button("Predict Price"):
     try:
-        processed_data=process_input_data(input_data)
+        processed_data=utils.process_input_data(input_data)
 
 
         # Predict price
